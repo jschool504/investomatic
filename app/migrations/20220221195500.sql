@@ -1,0 +1,2 @@
+alter table recommendations
+rename column three_month_precent to three_month_percent;

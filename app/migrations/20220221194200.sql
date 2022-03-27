@@ -1,0 +1,1 @@
+alter table recommendations add column symbol text not null;
