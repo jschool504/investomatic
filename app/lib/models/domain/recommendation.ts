@@ -13,5 +13,6 @@ export default interface Recommendation {
     buy: boolean
     processed: boolean
     createdAt: string,
-    fiftyTwoWkHigh: number
+    fiftyTwoWkHigh: number,
+    sendMessage: boolean
 }

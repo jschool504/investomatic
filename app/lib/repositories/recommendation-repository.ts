@@ -2,6 +2,7 @@ import dayjs from 'dayjs'
 import { Knex } from 'knex'
 import * as domain from '../models/domain'
 import { Recommendation } from '../models/persistence'
+import { measure } from '../utils'
 
 interface RecommendationRepositoryContext {
     recommendationsDbClient: Knex.QueryBuilder<Recommendation[]>
@@ -22,7 +23,8 @@ const toPersisted = (domain: domain.Recommendation): Recommendation => ({
     buy: domain.buy,
     processed: domain.processed,
     created_at: domain.createdAt,
-    fifty_two_wk_high: domain.fiftyTwoWkHigh
+    fifty_two_wk_high: domain.fiftyTwoWkHigh,
+    send_message: domain.sendMessage
 })
 
 const toDomain = (persisted: Recommendation): domain.Recommendation => ({
@@ -40,7 +42,8 @@ const toDomain = (persisted: Recommendation): domain.Recommendation => ({
     buy: persisted.buy,
     processed: persisted.processed,
     createdAt: persisted.created_at,
-    fiftyTwoWkHigh: persisted.fifty_two_wk_high
+    fiftyTwoWkHigh: persisted.fifty_two_wk_high,
+    sendMessage: persisted.send_message
 })
 
 
@@ -51,6 +54,7 @@ class RecommendationRepository {
         this.ctx = ctx
     }
 
+    @measure
     async getUnprocessedRecommendations(): Promise<domain.Recommendation[]> {
         const unprocessedRecommendations = await this.ctx.recommendationsDbClient
             .select('*')
@@ -60,12 +64,14 @@ class RecommendationRepository {
         return recommendations
     }
 
+    @measure
     async markRecommendationsAsProcessed() {
         return await this.ctx.knex<{ processed: boolean }>('recommendations')
             .update({ processed: true })
             .where('processed', false)
     }
 
+    @measure
     async insert(recommendations: domain.Recommendation[]) {
 
         const existing = (await this.ctx.knex<Recommendation>('recommendations')

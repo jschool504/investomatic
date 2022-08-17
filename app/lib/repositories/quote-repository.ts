@@ -1,6 +1,8 @@
 import { Knex } from 'knex'
 import { Quote } from '../models/persistence'
 import * as domain from '../models/domain'
+import { measure } from '../utils'
+import dayjs from 'dayjs'
 
 interface QuoteRepositoryContext {
     quoteDbClient: Knex.QueryBuilder<Quote>
@@ -112,23 +114,45 @@ const toDomain = (persisted: Quote) => ({
 
 
 class QuoteRepository {
-    private ctx: QuoteRepositoryContext
 
-    constructor(ctx: QuoteRepositoryContext) {
-        this.ctx = ctx
-    }
+    constructor(
+        private ctx: QuoteRepositoryContext
+    ) {}
 
+    @measure
     async getQuotesBySymbols(symbols: string[]): Promise<domain.Quote[]> {
+
         const persisted = await this.ctx.quotesDbClient
             .select('*')
+            .distinct()
             .whereIn('symbol', symbols)
+            // .where('quote_time_in_long', '>', dayjs().subtract(1, 'hour').unix() * 1000)
             .orderBy('quote_time_in_long', 'desc')
 
-        const quotes = persisted.map(toDomain)
-        
+        const i = persisted.map(toDomain)
+
+        const quotes = symbols
+            .map(
+                symbol => i.find(q => symbol === q.symbol)
+            )
+            .filter(q => !!q)
+
         return quotes
     }
 
+    @measure
+    async getLatestQuoteForSymbol(symbol: string): Promise<domain.Quote> {
+        const [persisted] = await this.ctx.quotesDbClient
+            .select('*')
+            .distinct()
+            .where('symbol', symbol)
+            .orderBy('quote_time_in_long', 'desc')
+            .limit(1) as Quote[]
+
+        return toDomain(persisted)
+    }
+
+    @measure
     async insert(quotes: domain.Quote[]) {
         return await this.ctx.quoteDbClient.insert(
             quotes.map(toPersisted)

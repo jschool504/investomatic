@@ -3,3 +3,4 @@ credentials.json
 dist/
 investomatic.zip
 ca-certificate.crt
+.DS_Store

@@ -12,4 +12,5 @@ export default interface Recommendation {
     processed: boolean
     created_at: string
     fifty_two_wk_high: number
+    send_message: boolean
 }

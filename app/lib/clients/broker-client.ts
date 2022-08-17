@@ -1,6 +1,7 @@
 import fetch from 'node-fetch'
 import Settings from '../../settings'
 import { History } from '../models/external'
+import { measure } from '../utils'
 const createBrokerQuote = require('../models/broker-quote')
 
 
@@ -16,6 +17,7 @@ export default class BrokerClient {
         this._fetch = ctx.fetch
     }
 
+    @measure
     async getPriceHistories(symbols): Promise<History[]> {
         const requests = symbols.map(async (s) => {
             const r = await this._fetch(`${Settings.BrokerApiBaseUrl}/marketdata/${s}/pricehistory?periodType=month&period=3&frequencyType=daily&apikey=${Settings.BrokerApiKey}`)
@@ -27,6 +29,7 @@ export default class BrokerClient {
         return results
     }
 
+    @measure
     async getQuotes(symbols) {
         const result = await this._fetch(`${Settings.BrokerApiBaseUrl}/marketdata/quotes?apikey=${Settings.BrokerApiKey}&symbol=${symbols.join(',')}`)
         const quoteResponse = await result.json()

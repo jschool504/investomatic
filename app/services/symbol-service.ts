@@ -1,6 +1,5 @@
-import SMSClient from '../lib/clients/sms-client'
-import { Symbol } from '../lib/models/domain'
 import SymbolRepository from '../lib/repositories/symbol-repository'
+import { measure } from '../lib/utils'
 
 interface SymbolServiceContext {
     symbolRepository: SymbolRepository
@@ -12,6 +11,7 @@ class SymbolService {
         private ctx: SymbolServiceContext
     ) {}
 
+    @measure
     async startWatching(ticker: string) {
         await this.ctx.symbolRepository.insert({
             ticker,
@@ -19,6 +19,7 @@ class SymbolService {
         })
     }
 
+    @measure
     async stopWatching(ticker: string) {
         await this.ctx.symbolRepository.update({
             ticker,

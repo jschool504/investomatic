@@ -3,6 +3,7 @@
 
 import { Dayjs } from "dayjs"
 import { Recommendation } from "../models/domain"
+import { measure } from "../utils"
 
 // x% higher than the previous lowest value
 const BUY_THRESHOLD = 0.15
@@ -76,6 +77,7 @@ export default class RecommendationEngine {
 
     }
 
+    @measure
     getRecommendations(quotes: any, candles: any, intervalPercentage: any, today: Dayjs): Recommendation[] {
         const adviceForQuotes = quotes.map(quote => {
             

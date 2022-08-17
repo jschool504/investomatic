@@ -6,6 +6,7 @@ import {
     ListObjectsV2Command, 
     SelectObjectContentCommandInput
 } from '@aws-sdk/client-s3'
+import { measure } from '../utils'
 
 
 interface S3ClientContext {
@@ -20,6 +21,7 @@ export default class S3Client {
         this._s3Client = ctx.s3Instance
     }
 
+    @measure
     select(query: string): any {
         const request: SelectObjectContentCommandInput = {
             Bucket: 'investomatic-db',

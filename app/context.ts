@@ -71,7 +71,7 @@ export default class Context {
     }
 
     get recommendationService() {
-        return RecommendationService(this)
+        return new RecommendationService(this)
     }
 
     get fetch(): typeof fetch {
@@ -128,11 +128,11 @@ export default class Context {
             return settings.DatabaseCredentials
         } else {
             return {
-                user: 'postgres',
+                user: '',
                 database: 'postgres',
                 host: '127.0.0.1',
                 port: 5432,
-                password: 'password'
+                password: ''
             }
         }
     }

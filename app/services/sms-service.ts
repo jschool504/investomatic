@@ -6,6 +6,7 @@ import BrokerClient from '../lib/clients/broker-client'
 import { Quote } from '../lib/models/domain'
 import OrderService from './order-service'
 import Settings from '../settings'
+import RecommendationService from './recommendation-service'
 
 interface SmsServiceContext {
     symbolService: SymbolService
@@ -14,6 +15,7 @@ interface SmsServiceContext {
     historyService: HistoryService
     brokerClient: BrokerClient
     orderService: OrderService
+    recommendationService: RecommendationService
 }
 
 
@@ -23,6 +25,9 @@ interface SmsEvent {
         sms: string
    }
 }
+
+
+const ERROR_MESSAGE = 'Sorry, something went wrong - please try again later!'
 
 
 type ConditionalFunction<T> = (value: T) => boolean
@@ -51,6 +56,7 @@ const MessageIdentifiers = {
     isTotalHoldingCost: (message: string) => message.startsWith('holding cost') || message.startsWith('total holding cost'),
     isHoldingCost: (message: string) => message.startsWith('holding cost '),
     isHoldingValue: (message: string) => message.startsWith('holding value'),
+    isRecommendation: (message: string) => message.startsWith('recommend'),
 }
 
 
@@ -60,41 +66,61 @@ const getTicker = (command: string) =>
         .toUpperCase()
 
 
+const handleError = (func: ExecutorFunction<string, Promise<string>>): ExecutorFunction<string, Promise<string>> =>
+    async (message: string): Promise<string> => {
+        try {
+            return await func(message)
+        } catch (e) {
+            console.error(e)
+            return Promise.resolve(ERROR_MESSAGE)
+        }
+    }
+
 const Operations = (ctx: SmsServiceContext): { [key: string]: ExecutorFunction<string, Promise<string>> } => ({
-    startWatchingTicker: async (message: string) => {
+    startWatchingTicker: handleError(async (message: string) => {
         const ticker = getTicker('watch')(message)
         await ctx.symbolService.startWatching(ticker)
         await ctx.quoteService.fetchQuotes([ticker])
         await ctx.historyService.fetchHistories([ticker])
         return `Started watching ${ticker} 👀`
-    },
-    stopWatchingTicker: async (message: string) => {
+    }),
+    stopWatchingTicker: handleError(async (message: string) => {
         const ticker = getTicker('stop watching')(message)
         await ctx.symbolService.stopWatching(ticker)
         return 'No longer watching ' + ticker
-    },
-    getQuote: async (message: string) => {
+    }),
+    getQuote: handleError(async (message: string) => {
         const ticker = getTicker('quote')(message)
         const quotes: Quote[] = await ctx.brokerClient.getQuotes([ticker])
         const [quote] = quotes
         return `${ticker} is currently $${quote.askPrice.toFixed(2)}\n`
             + `* it's 52 week high is $${quote.fiftyTwoWkHigh.toFixed(2)}\n`
             + `* and it's 52 week low is $${quote.fiftyTwoWkLow.toFixed(2)}\n`
-    },
-    getHoldingCost: async (message: string) => {
+    }),
+    getHoldingCost: handleError(async (message: string) => {
         const ticker = getTicker('holding cost')(message)
         const value = await ctx.orderService.getHoldingCost(ticker)
         return `You've invested $${value.toFixed(2)} in ${ticker}`
-    },
-    getTotalHoldingCost: async (message: string) => {
+    }),
+    getTotalHoldingCost: handleError(async (message: string) => {
         const value = await ctx.orderService.getHoldingCost(null)
         return `You've invested $${value.toFixed(2)}`
-    },
-    getHoldingValue: async (message: string) => {
+    }),
+    getHoldingValue: handleError(async (message: string) => {
         const ticker = getTicker('holding value')(message)
         const value = await ctx.orderService.getHoldingValue(ticker)
         return `Your shares of ${ticker} are currently worth $${value.toFixed(2)}`
-    }
+    }),
+    getRecommendation: handleError(async (message: string) => {
+        const ticker = getTicker('recommend')(message)
+
+        await ctx.historyService.fetchHistories([ticker])
+        await ctx.quoteService.fetchQuotes([ticker])
+        await ctx.recommendationService.buildRecommendations([ticker], true)
+        await ctx.recommendationService.processRecommendations()
+
+        return null
+    })
 })
 
 
@@ -104,17 +130,19 @@ const SmsService = (ctx: SmsServiceContext) => ({
 
         if (event.body.sms === Settings.Phone) {
 
-            const response = await Match<string, Promise<string>>(event.body.message.toLowerCase())(
+            const response = await Match<string, Promise<string | null>>(event.body.message.toLowerCase())(
                 [MessageIdentifiers.isWatch,            Operations(ctx).startWatchingTicker],
                 [MessageIdentifiers.isStopWatching,     Operations(ctx).stopWatchingTicker],
                 [MessageIdentifiers.isQuote,            Operations(ctx).getQuote],
                 [MessageIdentifiers.isHoldingCost,      Operations(ctx).getHoldingCost],
                 [MessageIdentifiers.isTotalHoldingCost, Operations(ctx).getTotalHoldingCost],
                 [MessageIdentifiers.isHoldingValue,     Operations(ctx).getHoldingValue],
+                [MessageIdentifiers.isRecommendation,   Operations(ctx).getRecommendation],
                 [Always, async () => 'Sorry, not sure what you asked :('],
             )
-
-            return await ctx.smsClient.send(response)
+            if (response) {
+                return await ctx.smsClient.send(response)
+            }
         }
     }
 

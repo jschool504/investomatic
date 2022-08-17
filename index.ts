@@ -34,8 +34,6 @@ export async function handler(event: ApplicationEvent, context: object | null) {
     await Migrate(ctx)
     console.timeEnd('migrations')
 
-    console.time('service timer')
-
     // CW event
     if (event['detail-type'] === 'Scheduled Event') {
 
@@ -44,25 +42,21 @@ export async function handler(event: ApplicationEvent, context: object | null) {
 
         if (resource.includes('retrieve-quotes-timer')) {
             const response = await ctx.quoteService.fetchQuotes(null)
-            console.timeEnd('service timer')
             return response
         }
 
         if (resource.includes('retrieve-price-history-timer')) {
             const response = await ctx.historyService.fetchHistories(null)
-            console.timeEnd('service timer')
             return response
         }
 
         if (resource.includes('recommendation-timer')) {
             const response = await ctx.recommendationService.buildRecommendations()
-            console.timeEnd('service timer')
             return response
         }
 
         if (resource.includes('process-recommendations-timer')) {
             const response = await ctx.recommendationService.processRecommendations()
-            console.timeEnd('service timer')
             return response
         }
 
@@ -71,14 +65,12 @@ export async function handler(event: ApplicationEvent, context: object | null) {
     // text message
     if (event.url === '/message' && event.method == 'POST') {
         const response = await ctx.smsService.handle(event)
-        console.timeEnd('service timer')
         return response
     }
 
     // vanguard email
     if (event.url === '/order' && event.method == 'POST') {
         const response = await ctx.orderService.processVanguardOrderExecutionEmail(event)
-        console.timeEnd('service timer')
         return response
     }
 

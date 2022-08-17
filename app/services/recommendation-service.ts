@@ -8,6 +8,7 @@ import RecommendationRepository from '../lib/repositories/recommendation-reposit
 import SMSClient from '../lib/clients/sms-client'
 import { Recommendation } from '../lib/models/domain'
 import SymbolRepository from '../lib/repositories/symbol-repository'
+import { measure } from '../lib/utils'
 
 
 interface RecommendationServiceContext {
@@ -21,18 +22,34 @@ interface RecommendationServiceContext {
 }
 
 
-const RecommendationService = (ctx: RecommendationServiceContext) => ({
+class RecommendationService {
 
-    buildRecommendations: async () => {
-        const symbols = (await ctx.symbolRepository.getWatched()).map(({ ticker }) => ticker)
-        const quotes = await ctx.quoteRepository.getQuotesBySymbols(symbols)
-        const candles = await ctx.candleRepository.getCandlesBySymbols(symbols)
+    constructor(
+        private ctx: RecommendationServiceContext
+    ) {}
+
+    @measure
+    async buildRecommendations(tickers: string[] | null = null, forceMessage: boolean = false) {
+        let symbols: string[] = []
+        if (tickers) {
+            symbols = tickers
+        } else {
+            symbols = (await this.ctx.symbolRepository.getWatched()).map(({ ticker }) => ticker)
+        }
+        const quotes = await this.ctx.quoteRepository.getQuotesBySymbols(symbols)
+        const candles = await this.ctx.candleRepository.getCandlesBySymbols(symbols)
         const intervalPercentage = dayjs().date() / dayjs().daysInMonth()
-        const recommendations: Recommendation[] = ctx.recommendationEngine.getRecommendations(quotes, candles, intervalPercentage, dayjs())
-        return await ctx.recommendationRepository.insert(recommendations)
-    },
+        const recommendations: Recommendation[] = this.ctx.recommendationEngine
+            .getRecommendations(quotes, candles, intervalPercentage, dayjs())
+            .map(rec => ({
+                ...rec,
+                sendMessage: forceMessage || rec.buy
+            }))
+        return await this.ctx.recommendationRepository.insert(recommendations)
+    }
 
-    processRecommendations: async () => {
+    @measure
+    async processRecommendations() {
 
         const bySymbol = (recs: { [key: string]: Recommendation }, rec: Recommendation): { [key: string]: Recommendation } => {
             return {
@@ -48,12 +65,14 @@ const RecommendationService = (ctx: RecommendationServiceContext) => ({
             const isYearHigher = year < 0
             const threeMoComparePhrase = isThreeMoHigher ? 'higher than' : 'lower than'
             const yearComparePhrase = isYearHigher ? 'higher than' : 'lower than'
-            return `${rec.symbol} is $${rec.askPrice}\n* that's ${Math.abs(threeMo).toFixed(2)}% ${threeMoComparePhrase} it's 3 month high of $${rec.range.high}\n* and ${Math.abs(year).toFixed(2)}% ${yearComparePhrase} it's 52 week high of $${rec.fiftyTwoWkHigh}`
+            const buyPhrase = rec.buy ? 'buy it!' : 'pass'
+
+            return `${rec.symbol} is $${rec.askPrice}\n* that's ${Math.abs(threeMo).toFixed(2)}% ${threeMoComparePhrase} it's 3 month high of $${rec.range.high}\n* and ${Math.abs(year).toFixed(2)}% ${yearComparePhrase} it's 52 week high of $${rec.fiftyTwoWkHigh}\n* ${buyPhrase}`
         }
 
-        const recommendations = await ctx.recommendationRepository.getUnprocessedRecommendations()
+        const recommendations = await this.ctx.recommendationRepository.getUnprocessedRecommendations()
         const recsBySymbol = recommendations
-            .filter(rec => !!rec.buy)
+            .filter(rec => !!rec.sendMessage)
             .reduce(bySymbol, {})
 
         const symbols = Object.keys(recsBySymbol)
@@ -63,14 +82,15 @@ const RecommendationService = (ctx: RecommendationServiceContext) => ({
 
 
         if (symbols.length > 0) {
-            const message = `👋 you might want to buy ${symbols.join(', ')}\n\n` + symbolMessages.join('\n\n')
-            await ctx.smsClient.send(message)
+            const message = `👋 here are your recommendations for ${symbols.join(', ')}\n\n` + symbolMessages.join('\n\n')
+            await this.ctx.smsClient.send(message)
         }
 
-        await ctx.recommendationRepository.markRecommendationsAsProcessed()
+        await this.ctx.recommendationRepository.markRecommendationsAsProcessed()
+
     }
 
-})
+}
 
 
 export default RecommendationService

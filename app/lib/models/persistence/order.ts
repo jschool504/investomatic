@@ -4,4 +4,5 @@ export default interface Order {
     quantity: number
     price: number
     timestamp: string
+    type: string
 }

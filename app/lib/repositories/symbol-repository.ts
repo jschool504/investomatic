@@ -1,6 +1,7 @@
 import { Knex } from 'knex'
 import * as domain from '../models/domain'
 import { Symbol } from '../models/persistence'
+import { measure } from '../utils'
 
 
 const toDomain = (persisted: Symbol): domain.Symbol => ({
@@ -26,6 +27,7 @@ class SymbolRepository {
         private ctx: SymbolRepositoryContext
     ) {}
 
+    @measure
     async getWatched(): Promise<Symbol[]> {
         const persisted = await this.ctx.knex<Symbol>('symbols')
             .select('*')
@@ -34,6 +36,7 @@ class SymbolRepository {
         return persisted.map(toDomain)
     }
 
+    @measure
     async insert(symbol: domain.Symbol) {
         const persisted = toPersisted(symbol)
 
@@ -49,6 +52,7 @@ class SymbolRepository {
             .insert(persisted)
     }
 
+    @measure
     async update(symbol: domain.Symbol) {
         const persisted = toPersisted(symbol)
         return await this.ctx.knex<Symbol>('symbols')

@@ -1,6 +1,8 @@
+import dayjs from 'dayjs'
 import { Knex } from 'knex'
 import * as domain from '../models/domain'
 import { Candle } from '../models/persistence'
+import { measure } from '../utils'
 
 interface CandleRepositoryContext {
     candleDbClient: Knex.QueryBuilder<Candle>
@@ -36,10 +38,12 @@ class CandleRepository {
         this.ctx = ctx
     }
 
+    @measure
     async getCandlesBySymbols(symbols: string[]): Promise<domain.Candle[]> {
         const persisted = await this.ctx.candlesDbClient
             .select('*')
             .distinct()
+            .where('datetime', '>', dayjs().subtract(1, 'month').unix() * 1000)
             .orderBy('datetime', 'desc')
 
         const candles = persisted.map(toDomain)
@@ -47,6 +51,7 @@ class CandleRepository {
         return candles
     }
 
+    @measure
     async insert(candles: domain.Candle[]) {
         return await this.ctx.candleDbClient.insert(
             candles.map(toPersisted)

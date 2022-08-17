@@ -1,7 +1,9 @@
 import dayjs from 'dayjs'
 import { Knex } from 'knex'
 import { Order } from '../models/domain'
+import OrderType from '../models/domain/order-type'
 import { Order as PersistedOrder } from '../models/persistence'
+import { measure } from '../utils'
 
 interface OrderRepositoryContext {
     knex: Knex
@@ -13,7 +15,8 @@ const toPersisted = (domain: Order): PersistedOrder => ({
     ticker: domain.ticker,
     quantity: domain.quantity,
     price: domain.price,
-    timestamp: domain.timestamp.toISOString()
+    timestamp: domain.timestamp.toISOString(),
+    type: domain.type.valueOf()
 })
 
 
@@ -21,22 +24,24 @@ const toDomain = (persisted: PersistedOrder): Order => ({
     ticker: persisted.ticker,
     quantity: persisted.quantity,
     price: persisted.price,
-    timestamp: dayjs(persisted.timestamp)
+    timestamp: dayjs(persisted.timestamp),
+    type: persisted.type as OrderType
 })
 
 
 class OrderRepository {
-    private ctx: OrderRepositoryContext
 
-    constructor(ctx: OrderRepositoryContext) {
-        this.ctx = ctx
-    }
+    constructor(
+        private ctx: OrderRepositoryContext
+    ) {}
 
+    @measure
     async insert(order: Order) {
         const persisted = toPersisted(order)
         return await this.ctx.knex<PersistedOrder>('orders').insert(persisted)
     }
 
+    @measure
     async get(ticker: string | null): Promise<Order[]> {
         const query = this.ctx.knex<PersistedOrder>('orders').select('*')
 
