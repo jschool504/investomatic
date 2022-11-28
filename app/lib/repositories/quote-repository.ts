@@ -2,7 +2,7 @@ import { Knex } from 'knex'
 import { Quote } from '../models/persistence'
 import * as domain from '../models/domain'
 import { measure } from '../utils'
-import dayjs from 'dayjs'
+import dayjs, { Dayjs } from 'dayjs'
 
 interface QuoteRepositoryContext {
     quoteDbClient: Knex.QueryBuilder<Quote>
@@ -157,6 +157,13 @@ class QuoteRepository {
         return await this.ctx.quoteDbClient.insert(
             quotes.map(toPersisted)
         )
+    }
+
+    @measure
+    async deleteBefore(before: number) {
+        return await this.ctx.quoteDbClient
+            .where('quote_time_in_long', '<', before)
+            .delete()
     }
 
 }

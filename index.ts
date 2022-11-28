@@ -63,10 +63,10 @@ export async function handler(event: ApplicationEvent, context: object | null) {
     }
 
     // text message
-    if (event.url === '/message' && event.method == 'POST') {
-        const response = await ctx.smsService.handle(event)
-        return response
-    }
+    // if (event.url === '/message' && event.method == 'POST') {
+    //     const response = await ctx.smsService.handle(event)
+    //     return response
+    // }
 
     // vanguard email
     if (event.url === '/order' && event.method == 'POST') {

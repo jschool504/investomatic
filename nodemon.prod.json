@@ -1,0 +1,16 @@
+{
+    "restartable": "rs",
+    "ignore": [
+      ".git",
+      "node_modules/**/node_modules"
+    ],
+    "verbose": true,
+    "watch": [
+      "dist/"
+    ],
+    "env": {
+      "ENV": "prod",
+      "NODE_TLS_REJECT_UNAUTHORIZED": 0
+    },
+    "ext": "js,json"
+  }

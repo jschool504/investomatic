@@ -7,20 +7,23 @@ const createBrokerQuote = require('../models/broker-quote')
 
 interface BrokerClientContext {
     fetch: typeof fetch
+    settings: Settings
 }
 
 
 export default class BrokerClient {
+    private ctx: BrokerClientContext
     private _fetch: typeof fetch
 
     constructor(ctx: BrokerClientContext) {
+        this.ctx = ctx
         this._fetch = ctx.fetch
     }
 
     @measure
     async getPriceHistories(symbols): Promise<History[]> {
         const requests = symbols.map(async (s) => {
-            const r = await this._fetch(`${Settings.BrokerApiBaseUrl}/marketdata/${s}/pricehistory?periodType=month&period=3&frequencyType=daily&apikey=${Settings.BrokerApiKey}`)
+            const r = await this._fetch(`${this.ctx.settings.BrokerApiBaseUrl}/marketdata/${s}/pricehistory?periodType=month&period=3&frequencyType=daily&apikey=${this.ctx.settings.BrokerApiKey}`)
             return await r.json()
         })
 
@@ -31,7 +34,7 @@ export default class BrokerClient {
 
     @measure
     async getQuotes(symbols) {
-        const result = await this._fetch(`${Settings.BrokerApiBaseUrl}/marketdata/quotes?apikey=${Settings.BrokerApiKey}&symbol=${symbols.join(',')}`)
+        const result = await this._fetch(`${this.ctx.settings.BrokerApiBaseUrl}/marketdata/quotes?apikey=${this.ctx.settings.BrokerApiKey}&symbol=${symbols.join(',')}`)
         const quoteResponse = await result.json()
     
         const output = symbols.reduce(

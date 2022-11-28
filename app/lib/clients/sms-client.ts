@@ -1,5 +1,6 @@
 import fetch from 'node-fetch'
 import Settings from '../../settings'
+import MessageClient from '../interfaces/message-client'
 import { measure } from '../utils'
 
 const generateBasicAuthHeader = (credentials) => {
@@ -13,12 +14,13 @@ const generateBasicAuthHeader = (credentials) => {
 interface SmsClientContext {
     fetch: typeof fetch
     clickSendCredentials: { username: string, password: string }
+    settings: Settings
 }
 
 
 const BASE_URL = 'https://rest.clicksend.com/v3'
 
-class SMSClient {
+class SMSClient implements MessageClient {
     #authHeader: string
 
     constructor(
@@ -39,7 +41,7 @@ class SMSClient {
             ]
         })
 
-        if (!Settings.SuppressSms) {
+        if (!this.ctx.settings.SuppressSms) {
             const response = await this.ctx.fetch(BASE_URL + '/sms/send', {
                 method: 'POST',
                 headers: {

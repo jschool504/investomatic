@@ -1,14 +1,13 @@
-import ConfigurationClient from '../lib/clients/configuration-client'
 import BrokerClient from '../lib/clients/broker-client'
 import QuoteRepository from '../lib/repositories/quote-repository'
 import RecommendationEngine from '../lib/engines/recommendation-engine'
 import CandleRepository from '../lib/repositories/candle-repository'
 import dayjs from 'dayjs'
 import RecommendationRepository from '../lib/repositories/recommendation-repository'
-import SMSClient from '../lib/clients/sms-client'
 import { Recommendation } from '../lib/models/domain'
 import SymbolRepository from '../lib/repositories/symbol-repository'
 import { measure } from '../lib/utils'
+import MessageClient from '../lib/interfaces/message-client'
 
 
 interface RecommendationServiceContext {
@@ -18,7 +17,7 @@ interface RecommendationServiceContext {
     recommendationEngine: RecommendationEngine
     candleRepository: CandleRepository
     recommendationRepository: RecommendationRepository
-    smsClient: SMSClient
+    smsClient: MessageClient
 }
 
 

@@ -1,4 +1,3 @@
-import SMSClient from '../lib/clients/sms-client'
 import SymbolService from './symbol-service'
 import QuoteService from './quote-service'
 import HistoryService from './history-service'
@@ -7,23 +6,24 @@ import { Quote } from '../lib/models/domain'
 import OrderService from './order-service'
 import Settings from '../settings'
 import RecommendationService from './recommendation-service'
+import MessageClient from '../lib/interfaces/message-client'
+import { measure } from '../lib/utils'
 
 interface SmsServiceContext {
     symbolService: SymbolService
-    smsClient: SMSClient
+    smsClient: MessageClient
     quoteService: QuoteService
     historyService: HistoryService
     brokerClient: BrokerClient
     orderService: OrderService
     recommendationService: RecommendationService
+    settings: Settings
 }
 
 
 interface SmsEvent {
-   body: {
-        message: string
-        sms: string
-   }
+    message: string
+    sms: string | number
 }
 
 
@@ -124,29 +124,30 @@ const Operations = (ctx: SmsServiceContext): { [key: string]: ExecutorFunction<s
 })
 
 
-const SmsService = (ctx: SmsServiceContext) => ({
+export default class SmsService {
 
-    handle: async (event: SmsEvent) => {
+    constructor(
+        private ctx: SmsServiceContext
+    ) {}
 
-        if (event.body.sms === Settings.Phone) {
+    @measure
+    async handle(event: SmsEvent) {
 
-            const response = await Match<string, Promise<string | null>>(event.body.message.toLowerCase())(
-                [MessageIdentifiers.isWatch,            Operations(ctx).startWatchingTicker],
-                [MessageIdentifiers.isStopWatching,     Operations(ctx).stopWatchingTicker],
-                [MessageIdentifiers.isQuote,            Operations(ctx).getQuote],
-                [MessageIdentifiers.isHoldingCost,      Operations(ctx).getHoldingCost],
-                [MessageIdentifiers.isTotalHoldingCost, Operations(ctx).getTotalHoldingCost],
-                [MessageIdentifiers.isHoldingValue,     Operations(ctx).getHoldingValue],
-                [MessageIdentifiers.isRecommendation,   Operations(ctx).getRecommendation],
-                [Always, async () => 'Sorry, not sure what you asked :('],
-            )
-            if (response) {
-                return await ctx.smsClient.send(response)
-            }
+        const response = await Match<string, Promise<string | null>>(event.message.toLowerCase())(
+            [MessageIdentifiers.isWatch,            Operations(this.ctx).startWatchingTicker],
+            [MessageIdentifiers.isStopWatching,     Operations(this.ctx).stopWatchingTicker],
+            [MessageIdentifiers.isQuote,            Operations(this.ctx).getQuote],
+            [MessageIdentifiers.isHoldingCost,      Operations(this.ctx).getHoldingCost],
+            [MessageIdentifiers.isTotalHoldingCost, Operations(this.ctx).getTotalHoldingCost],
+            [MessageIdentifiers.isHoldingValue,     Operations(this.ctx).getHoldingValue],
+            [MessageIdentifiers.isRecommendation,   Operations(this.ctx).getRecommendation],
+            [Always, async () => 'Sorry! Not sure what you asked :('],
+        )
+
+        if (response) {
+            return await this.ctx.smsClient.send(response)
         }
+
     }
 
-})
-
-
-export default SmsService
+}

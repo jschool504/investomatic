@@ -1,6 +1,7 @@
 node_modules/
-credentials.json
+*credentials.json
 dist/
 investomatic.zip
 ca-certificate.crt
 .DS_Store
+settings.json

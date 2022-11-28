@@ -2,17 +2,17 @@ import dayjs, { Dayjs } from 'dayjs'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
-import SMSClient from '../lib/clients/sms-client'
 import { Order } from '../lib/models/domain'
 import OrderRepository from '../lib/repositories/order-repository'
 import QuoteRepository from '../lib/repositories/quote-repository'
 import { measure } from '../lib/utils'
 import TransactionType from '../lib/models/domain/order-type'
 import OrderType from '../lib/models/domain/order-type'
+import MessageClient from '../lib/interfaces/message-client'
 
 interface OrderServiceContext {
     orderRepository: OrderRepository
-    smsClient: SMSClient
+    smsClient: MessageClient
     quoteRepository: QuoteRepository
 }
 

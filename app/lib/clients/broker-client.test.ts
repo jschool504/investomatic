@@ -11,8 +11,11 @@ describe('BrokerClient', () => {
 
             const fakeFetch: any = () => {}
 
+            const settings: any = {}
+
             const brokerClient = new BrokerClient({
-                fetch: fakeFetch
+                fetch: fakeFetch,
+                settings: settings
             })
 
             const actual = await brokerClient.getPriceHistories(['ACES'])
