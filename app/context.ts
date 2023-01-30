@@ -47,7 +47,7 @@ export default class Context {
         const bot = new TelegramBot(this.settings.TelegramToken, { polling: true })
 
         bot.on('text', async (msg) => {
-            console.log(msg.text)
+            console.log('[INCOMING MESSAGE] ' + msg.text)
             const chatId = msg.chat.id
             await this.smsService.handle({
                 message: msg.text || '',
@@ -279,7 +279,10 @@ export default class Context {
                 this.scheduler.start()
                 this.server.listen(
                     this.settings.port,
-                    () => console.log(`Investomatic running on ${this.settings.port}`)
+                    () => {
+                        console.log(`Investomatic running on ${this.settings.port}`)
+                        this.smsClient.send('Investomic started successfully!')
+                    }
                 )
             }
         }

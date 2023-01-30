@@ -16,6 +16,7 @@ export default class TelegramClient implements MessageClient {
 
     @measure
     async send(message: string) {
+        console.log('[OUTGOING MESSAGE] ' + message)
         await this.ctx.telegramBot.sendMessage(this.ctx.settings.TelegramChatId, message)
     }
 
