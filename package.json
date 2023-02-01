@@ -9,7 +9,7 @@
     "build": "tsc",
     "package": "./zip.sh",
     "migrate": "ts-node app/migrate.ts",
-    "start:prod": "nodemon --config nodemon.prod.json --exec \"node dist/app/server.js\" >> server.log &",
+    "start:prod": "nodemon --config nodemon.prod.json --exec \"node dist/app/server.js || touch restart.js\" >> server.log &",
     "start": "ts-node app/server.ts",
     "start:watch": "nodemon -e \".ts,.json\" -x \"ts-node app/server.ts\"",
     "start-proxy": "ts-node proxy-server.ts 2> error.log 1> server.log &",

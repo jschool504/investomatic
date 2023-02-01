@@ -6,7 +6,8 @@
     ],
     "verbose": true,
     "watch": [
-      "dist/"
+      "dist/",
+      "restart.js"
     ],
     "env": {
       "ENV": "prod",
