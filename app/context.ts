@@ -281,7 +281,7 @@ export default class Context {
                     this.settings.port,
                     () => {
                         console.log(`Investomatic running on ${this.settings.port}`)
-                        this.smsClient.send('Investomic started successfully!')
+                        this.smsClient.send('Investomatic started successfully!')
                     }
                 )
             }
