@@ -209,14 +209,14 @@ export default class Context {
         })
 
         // retrieve quotes
-        scheduler.add({
-            runOnStart: true,
-            interval: EVERY_MINUTE,
-            function: async () => {
-                const response = await this.quoteService.fetchQuotes(this.settings.DefaultSymbols)
-                console.log(response)
-            }
-        })
+        // scheduler.add({
+        //     runOnStart: true,
+        //     interval: EVERY_MINUTE,
+        //     function: async () => {
+        //         const response = await this.quoteService.fetchQuotes(this.settings.DefaultSymbols)
+        //         console.log(response)
+        //     }
+        // })
 
         // price history
         scheduler.add({
@@ -239,14 +239,14 @@ export default class Context {
         })
 
         // send recommendations out
-        scheduler.add({
-            runOnStart: true,
-            interval: EVERY_MINUTE,
-            function: async () => {
-                const response = await this.recommendationService.processRecommendations()
-                console.log(response)
-            }
-        })
+        // scheduler.add({
+        //     runOnStart: true,
+        //     interval: EVERY_MINUTE,
+        //     function: async () => {
+        //         const response = await this.recommendationService.processRecommendations()
+        //         console.log(response)
+        //     }
+        // })
 
         return scheduler
     }
