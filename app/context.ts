@@ -210,7 +210,7 @@ export default class Context {
 
         // retrieve quotes
         scheduler.add({
-            runOnStart: true,
+            runOnStart: false,
             interval: EVERY_MINUTE,
             function: async () => {
                 const response = await this.quoteService.fetchQuotes(this.settings.DefaultSymbols)
@@ -240,7 +240,7 @@ export default class Context {
 
         // send recommendations out
         scheduler.add({
-            runOnStart: true,
+            runOnStart: false,
             interval: EVERY_MINUTE,
             function: async () => {
                 const response = await this.recommendationService.processRecommendations()
