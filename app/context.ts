@@ -36,11 +36,10 @@ const EVERY_SECOND = 1000
 
 
 export default class Context {
-    env: string
 
-    constructor(env: string) {
-        this.env = env
-    }
+    constructor(
+        public env: string
+    ) {}
 
     @memo()
     getTelegramBot() {

@@ -79,7 +79,6 @@ class RecommendationService {
         const symbolMessages = Object.values(recsBySymbol)
             .map(msgFromRec)
 
-
         if (symbols.length > 0) {
             const message = `👋 here are your recommendations for ${symbols.join(', ')}\n\n` + symbolMessages.join('\n\n')
             await this.ctx.smsClient.send(message)

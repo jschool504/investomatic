@@ -12,6 +12,7 @@
     "start:prod": "nodemon --config nodemon.prod.json --exec \"node dist/app/server.js 2>> error.log 1>> server.log || touch restart.js\" >> nodemon.log &",
     "start": "ts-node app/server.ts",
     "start:watch": "nodemon -e \".ts,.json\" -x \"ts-node app/server.ts\"",
+    "script:merge-duplicate-candles": "ts-node scripts/merge-duplicate-candles.ts",
     "start-proxy": "ts-node proxy-server.ts 2> error.log 1> server.log &",
     "test": "mocha ./dist/**/*.test.js",
     "test:watch": "nodemon -e \".ts\" -x \"tsc && npm test\"",
