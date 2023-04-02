@@ -229,7 +229,7 @@ export default class Context {
 
         // build recommendations
         scheduler.add({
-            runOnStart: false,
+            runOnStart: true,
             interval: EVERY_HOUR,
             function: async () => {
                 const response = await this.recommendationService.buildRecommendations()

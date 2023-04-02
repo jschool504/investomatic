@@ -4,6 +4,57 @@ import * as domain from '../models/domain'
 import { measure } from '../utils'
 import dayjs, { Dayjs } from 'dayjs'
 
+
+const QUOTE_FIELDS = [
+    'asset_type',
+    'asset_main_type',
+    'cusip',
+    'asset_sub_type',
+    'symbol',
+    'description',
+    'bid_price',
+    'bid_size',
+    'bid_id',
+    'ask_price',
+    'ask_size',
+    'ask_id',
+    'last_price',
+    'last_id',
+    'open_price',
+    'high_price',
+    'low_price',
+    'bid_tick',
+    'close_price',
+    'net_change',
+    'total_volume',
+    'quote_time_in_long',
+    'trade_time_in_long',
+    'mark',
+    'exchange',
+    'exchange_name',
+    'marginable',
+    'shortable',
+    'volatility',
+    'digits',
+    'fifty_two_wk_high',
+    'fifty_two_wk_low',
+    'nav',
+    'pe_ratio',
+    'div_amount',
+    'div_yield',
+    'div_date',
+    'security_status',
+    'regular_market_last_price',
+    'regular_market_last_size',
+    'regular_market_net_change',
+    'regular_market_trade_time_in_long',
+    'net_percent_change_in_double',
+    'mark_change_in_double',
+    'regular_market_percent_change_in_double',
+    'delayed'
+]
+
+
 interface QuoteRepositoryContext {
     quoteDbClient: Knex.QueryBuilder<Quote>
     quotesDbClient: Knex.QueryBuilder<Quote[]>
@@ -123,11 +174,11 @@ class QuoteRepository {
     async getQuotesBySymbols(symbols: string[]): Promise<domain.Quote[]> {
 
         const persisted = await this.ctx.quotesDbClient
-            .select('*')
-            .distinct()
+            .select(QUOTE_FIELDS)
             .whereIn('symbol', symbols)
-            // .where('quote_time_in_long', '>', dayjs().subtract(1, 'hour').unix() * 1000)
+            .groupBy(QUOTE_FIELDS)
             .orderBy('quote_time_in_long', 'desc')
+            .limit(100000)
 
         const i = persisted.map(toDomain)
 
