@@ -20,6 +20,8 @@ interface Credentials {
         port: number
         password: string
         ssl: {
+            require: boolean
+            rejectUnauthorized: boolean
             cert: Buffer
         }
     }
@@ -69,6 +71,7 @@ export class SettingsManager {
             DatabaseCredentials: {
                 ...fileCredentials.DatabaseCredentials,
                 ssl: ctx.env !== 'prod' ? null : {
+                    ...fileCredentials.DatabaseCredentials.ssl,
                     cert: fs.readFileSync('./ca-certificate.crt')
                 }
             }

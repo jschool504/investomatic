@@ -10,8 +10,7 @@
       "restart.js"
     ],
     "env": {
-      "ENV": "prod",
-      "NODE_TLS_REJECT_UNAUTHORIZED": 0
+      "ENV": "prod"
     },
     "ext": "js,json"
   }
