@@ -8,3 +8,4 @@ settings.json
 error.log
 nodemon.log
 server.log
+.DS_Store
